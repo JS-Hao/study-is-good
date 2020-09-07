@@ -1,4 +1,10 @@
-type Element = Component | ElementWrapper;
+export type Element = Component | ElementWrapper;
+
+export interface State {
+  [key: string]: any;
+}
+
+export const RENDER_TO_DOM = Symbol("render-to-dom");
 
 window.createElement = createElement;
 
@@ -27,6 +33,8 @@ export function createElement(
         child = new TextWrapper(child);
       }
 
+      if (child === null) return;
+
       if (typeof child === "object" && child instanceof Array) {
         insertChildren(child);
       } else {
@@ -40,31 +48,24 @@ export function createElement(
   return e;
 }
 
-export function render(element: any, $dom: HTMLDivElement) {
-  $dom.appendChild(element.root);
+export function render(element: any, $dom: HTMLElement) {
+  const range = document.createRange();
+  range.setStart($dom, 0);
+  range.setEnd($dom, $dom.childNodes.length);
+  range.deleteContents();
+  element[RENDER_TO_DOM](range);
 }
 
 export class Component {
-  private _root: HTMLElement;
-
-  public get root(): HTMLElement {
-    if (!this._root) {
-      this.root = this.render().root;
-    }
-
-    return this._root;
-  }
-
-  public set root(value: HTMLElement) {
-    this._root = value;
-  }
-
   public props: { [key: string]: any };
   public children: (Element | TextWrapper)[];
+  public state: State;
+
+  private range: Range;
 
   constructor() {
     this.props = Object.create(null);
-    this.root = null;
+    this.state = null;
     this.children = [];
   }
 
@@ -76,8 +77,24 @@ export class Component {
     this.children.push(element);
   }
 
+  [RENDER_TO_DOM](range: Range) {
+    range.deleteContents();
+    this.render()[RENDER_TO_DOM](range);
+    this.range = range;
+  }
+
   render(): Component | ElementWrapper {
     throw "no implement";
+  }
+
+  setState(newState: State) {
+    this.state = Object.assign({}, this.state, newState);
+    this.rerender();
+  }
+
+  private rerender() {
+    this.range.deleteContents();
+    this[RENDER_TO_DOM](this.range);
   }
 }
 
@@ -89,11 +106,28 @@ class ElementWrapper {
   }
 
   setAttribute(key: string, value: any) {
-    this.root.setAttribute(key, value);
+    if (key.indexOf("on") === 0) {
+      const event = key.slice(2).toLowerCase();
+      this.root.addEventListener(event, value);
+    } else {
+      if (key === "className") {
+        key = "class";
+      }
+
+      this.root.setAttribute(key, value);
+    }
   }
 
   appendChild(element: Element | TextWrapper) {
-    this.root.appendChild(element.root);
+    const range = document.createRange();
+    range.setStart(this.root, this.root.childNodes.length);
+    range.setEnd(this.root, this.root.childNodes.length);
+    element[RENDER_TO_DOM](range);
+  }
+
+  [RENDER_TO_DOM](range: Range) {
+    range.deleteContents();
+    range.insertNode(this.root);
   }
 }
 
@@ -102,5 +136,10 @@ class TextWrapper {
 
   constructor(content: string) {
     this.root = document.createTextNode(content);
+  }
+
+  [RENDER_TO_DOM](range: Range) {
+    range.deleteContents();
+    range.insertNode(this.root);
   }
 }
