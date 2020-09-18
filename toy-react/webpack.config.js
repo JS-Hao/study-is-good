@@ -8,6 +8,9 @@ module.exports = {
   resolve: {
     extensions: [".tsx", ".ts", ".jsx", ".js"],
   },
+  optimization: {
+    minimize: false,
+  },
   module: {
     rules: [
       {

@@ -1,0 +1,82 @@
+<body>
+  <canvas id="canvas" width="500" height="500"></canvas>
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    function regularShape(x, y, r, edges = 3) {
+      const points = [];
+      const delta = (2 * Math.PI) / edges;
+      for (let i = 0; i < edges; i++) {
+        const theta = i * delta;
+        points.push([x + r * Math.sin(theta), y + r * Math.cos(theta)]);
+      }
+
+      return points;
+    }
+
+    function drawShape(ctx, points) {
+      ctx.fillStyle = "red";
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      points.forEach((p, i) => {
+        if (i === 0) {
+          ctx.moveTo(...p);
+        } else {
+          ctx.lineTo(...p);
+        }
+      });
+      ctx.closePath();
+      ctx.stroke();
+      ctx.fill();
+    }
+
+    const shapeTypes = [3, 4, 5, 6, 100];
+    const shapes = createCache();
+    const COUNT = 500;
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < COUNT; i++) {
+        const shape = shapes[Math.floor(Math.random() * shapeTypes.length)];
+        ctx.drawImage(
+          shape,
+          Math.random() * canvas.width,
+          Math.random() * canvas.height
+        );
+      }
+
+      // for (let i = 0; i < COUNT; i++) {
+      //   const type = shapeTypes[Math.floor(Math.random() * shapeTypes.length)];
+      //   const points = regularShape(
+      //     Math.random() * canvas.width,
+      //     Math.random() * canvas.height,
+      //     10,
+      //     type
+      //   );
+      //   drawShape(ctx, points);
+      // }
+      requestAnimationFrame(draw);
+    }
+
+    function createCache() {
+      const ret = [];
+      for (let i = 0; i < shapeTypes.length; i++) {
+        // 创建离屏 canvas 缓存图形
+        const cacheCanvas = new OffscreenCanvas(20, 20);
+        const type = shapeTypes[i];
+        const ctx = cacheCanvas.getContext("2d");
+        ctx.fillStyle = "red";
+        ctx.strokeStyle = "black";
+        const points = regularShape(10, 10, 10, type);
+        drawShape(ctx, points);
+        ret.push(cacheCanvas);
+      }
+
+      return ret;
+    }
+
+    draw();
+  </script>
+</body>
