@@ -110,6 +110,31 @@ DOM 型 XSS 攻击，主要是前端 js 编写不严谨，把不可信任的数�
 
 ### encodeURI / decodeURI / encodeURIComponent / decodeURIComponent 的作用与区别
 
+1. 作用：URI 中存在保留字，如`: / & ?`等，如果本身 URI 参数中就携带部分保留字，就会对浏览器产生歧义，为了避免歧义，就需要编码，使这些特殊字符变成普通文本，这也是这些 API 的任务所在
+2. encodeURI 是用于对整个 URI 进行编码，并不会对诸如 `: / & ?`进行转义，但会对类似空格等特殊字符进行转义；
+3. encodeURIComponent 则是对 URI 组件进行转义，比如上述提到的参数含有特殊保留字，则可以使用它进行转义
+
 ### CSP (Content Security Policy) 是个啥？
 
+简单来说，CSP 一个额外的安全层，用于检测并削弱某些特定类型的攻击，包括跨站脚本攻击（XSS）及数据注入攻击等，它通过告诉浏览器一系列规则，严格指定页面中的哪些资源允许有哪些来源，不在指定范围的统统拒绝。其施展途径有：
+
+- 在 meta 标签设置 csp 属性，
+- 在响应头中设置（在响应头设置能具备更全的功能）
+
+例如以下设置，对所有 fetch 方式的链接，仅允许同域名下的资源通过
+
+参考[Content Security Policy (CSP) 介绍](https://juejin.im/entry/6844903665224908807)
+
+```html
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'" />
+```
+
 ### 了解下 HTTP-only
+
+### 哪些请求能跨域？哪些不能？
+
+列举: ajax 请求，图片，脚本，表单提交
+
+## 阅读清单
+
+- [ajax 跨域，这应该是最全的解决方案了](https://segmentfault.com/a/1190000012469713)
