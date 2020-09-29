@@ -129,8 +129,6 @@ DOM 型 XSS 攻击，主要是前端 js 编写不严谨，把不可信任的数�
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'" />
 ```
 
-### 了解下 HTTP-only
-
 ### 哪些请求能跨域？哪些不能？
 
 列举: ajax 请求，图片，脚本，表单提交
@@ -138,3 +136,34 @@ DOM 型 XSS 攻击，主要是前端 js 编写不严谨，把不可信任的数�
 ## 阅读清单
 
 - [ajax 跨域，这应该是最全的解决方案了](https://segmentfault.com/a/1190000012469713)
+
+## ajax 跨域方案
+
+### jsonp
+
+#### 原理
+
+jsonp 是一个基本被淘汰的跨域手段，它主要是借助了 script 标签的跨域能力，从而达到跨域目的，其步骤如下：
+
+1. js 动态生成 script 标签
+2. 将 src 地址改成接口地址，并定义供后台调用的函数（如 https://api.x.com/getToken?callback=foo），
+
+   ```js
+   const foo = (data) => {
+     // do something
+   };
+   ```
+
+3. 向后台发起请求，后台在 script 脚本中写入数据，如 `foo({ data: 'testData' })`
+4. 加载脚本后立即执行里面的代码，foo 函数即可接受正常数据
+
+#### 缺点
+
+只能简单实现 get 请求，无法实现 post 或其它请求，局限很大
+
+### CORS
+
+一张图说明一切
+![CORS工作原理](https://image-static.segmentfault.com/323/484/323484072-5a3733859025d_articlex)
+
+### Node 代理转发
